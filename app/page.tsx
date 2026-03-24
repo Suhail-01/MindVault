@@ -8,6 +8,7 @@ import Particles from '@/components/Particles';
 import BorderGlow from '@/components/BorderGlow';
 import BubbleMenu from '@/components/BubbleMenu';
 import TextPressure from '@/components/TextPressure';
+import { TextHoverEffect } from '@/components/ui/text-hover-effect';
 
 const menuItems = [
   {
@@ -26,7 +27,7 @@ const menuItems = [
   },
   {
     label: 'projects',
-    href: '#',
+    href: 'https://github.com/Suhail-01/MindVault',
     ariaLabel: 'Projects',
     rotation: 8,
     hoverStyles: { bgColor: '#f59e0b', textColor: '#ffffff' }
@@ -151,7 +152,7 @@ export default function LandingPage() {
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
             <a 
-              href="https://github.com" 
+              href="https://github.com/Suhail-01/MindVault" 
               target="_blank"
               className="w-full sm:w-auto px-8 py-4 bg-white/5 text-white border border-white/10 rounded-2xl font-bold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2"
             >
@@ -207,16 +208,22 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="relative z-10 border-t border-white/10 py-12 px-8 mt-32">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-2">
-            <Brain className="w-5 h-5 text-gray-500" />
-            <span className="font-bold text-gray-500">MindVault</span>
+        <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
+          <div className="w-full h-48 flex items-center justify-center">
+            <TextHoverEffect text="MindVault" />
           </div>
-          <p className="text-gray-600 text-sm">© 2026 MindVault. All rights reserved.</p>
-          <div className="flex items-center gap-6">
-            <Link href="#" className="text-gray-600 hover:text-white transition-colors text-sm">Privacy</Link>
-            <Link href="#" className="text-gray-600 hover:text-white transition-colors text-sm">Terms</Link>
-            <Link href="#" className="text-gray-600 hover:text-white transition-colors text-sm">Twitter</Link>
+          <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-2">
+              <Brain className="w-5 h-5 text-gray-500" />
+              <span className="font-bold text-gray-500">MindVault</span>
+            </div>
+            <p className="text-gray-600 text-sm">© 2026 MindVault. All rights reserved.</p>
+            <div className="flex items-center gap-6">
+              <Link href="https://github.com/Suhail-01/MindVault" target="_blank" className="text-gray-600 hover:text-white transition-colors text-sm">GitHub</Link>
+              <Link href="#" className="text-gray-600 hover:text-white transition-colors text-sm">Privacy</Link>
+              <Link href="#" className="text-gray-600 hover:text-white transition-colors text-sm">Terms</Link>
+              <Link href="#" className="text-gray-600 hover:text-white transition-colors text-sm">Twitter</Link>
+            </div>
           </div>
         </div>
       </footer>

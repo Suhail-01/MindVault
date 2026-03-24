@@ -64,6 +64,10 @@ export default function Dashboard() {
 
         // 3. Calculate cosine similarity
         const results = items.map((item: any, index: number) => {
+          if (!queryEmbedding?.embeddings?.[0]?.values || 
+              !itemEmbeddings?.embeddings?.[index]?.values) {
+            return { ...item, similarity: 0 };
+          }
           const similarity = cosineSimilarity(
             queryEmbedding.embeddings[0].values,
             itemEmbeddings.embeddings[index].values
