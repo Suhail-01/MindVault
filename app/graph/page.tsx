@@ -152,7 +152,9 @@ export default function GraphView() {
       event.subject.fy = null;
     }
 
-    return () => simulation.stop();
+    return () => {
+      simulation.stop();
+    };
   }, [items, router]);
 
   return (
