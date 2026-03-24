@@ -68,7 +68,7 @@ export function SaveItemModal({ isOpen, onClose }: { isOpen: boolean, onClose: (
         }
       });
 
-      const aiData = JSON.parse(response.text);
+      const aiData = JSON.parse(response.text ?? '{}');
 
       setStatus('Saving to vault...');
 

@@ -64,7 +64,7 @@ function SaveContent() {
           }
         });
 
-        const aiData = JSON.parse(response.text);
+        const aiData = JSON.parse(response.text ?? '{}');
 
         setStatus('Saving to vault...');
         await addDoc(collection(db, 'saved_items'), {
