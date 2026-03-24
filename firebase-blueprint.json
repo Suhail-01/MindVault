@@ -1,0 +1,88 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and preferences",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "plan": { "type": "string", "enum": ["free", "pro"] },
+        "preferences": {
+          "type": "object",
+          "properties": {
+            "theme": { "type": "string" },
+            "notifications": { "type": "boolean" }
+          }
+        }
+      },
+      "required": ["name", "email"]
+    },
+    "SavedItem": {
+      "title": "SavedItem",
+      "description": "A saved link or content",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "url": { "type": "string" },
+        "type": { "type": "string", "enum": ["link", "text", "image", "video"] },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "thumbnail_url": { "type": "string" },
+        "content": { "type": "string" },
+        "ai_summary": { "type": "string" },
+        "ai_tags": { "type": "array", "items": { "type": "string" } },
+        "topic_cluster": { "type": "string" },
+        "is_favorite": { "type": "boolean" },
+        "is_archived": { "type": "boolean" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "last_surfaced_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "url", "title"]
+    },
+    "Collection": {
+      "title": "Collection",
+      "description": "A folder or collection of items",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "color": { "type": "string" },
+        "description": { "type": "string" },
+        "item_ids": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["userId", "name"]
+    },
+    "Highlight": {
+      "title": "Highlight",
+      "description": "A highlighted text within an item",
+      "type": "object",
+      "properties": {
+        "itemId": { "type": "string" },
+        "userId": { "type": "string" },
+        "text": { "type": "string" },
+        "color": { "type": "string" },
+        "note": { "type": "string" }
+      },
+      "required": ["itemId", "userId", "text"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/saved_items/{itemId}": {
+      "schema": "SavedItem",
+      "description": "Saved items for all users"
+    },
+    "/collections/{collectionId}": {
+      "schema": "Collection",
+      "description": "User collections"
+    },
+    "/highlights/{highlightId}": {
+      "schema": "Highlight",
+      "description": "Highlights for items"
+    }
+  }
+}

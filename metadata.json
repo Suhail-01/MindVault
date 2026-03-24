@@ -1,0 +1,5 @@
+{
+  "name": "MindVault",
+  "description": "A Personal Knowledge Management app (Second Brain) with AI-powered summaries, semantic search, and memory resurfacing.",
+  "requestFramePermissions": []
+}
