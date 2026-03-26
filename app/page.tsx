@@ -8,7 +8,7 @@ import Particles from '@/components/Particles';
 import BorderGlow from '@/components/BorderGlow';
 import BubbleMenu from '@/components/BubbleMenu';
 import TextPressure from '@/components/TextPressure';
-import { TextHoverEffect } from '@/components/ui/text-hover-effect';
+import CircularText from '@/components/CircularText';
 
 const menuItems = [
   {
@@ -130,12 +130,14 @@ export default function LandingPage() {
               text="MindVault"
               flex
               alpha={false}
-              stroke={false}
+              stroke={true}
               width
               weight
               italic
               textColor="#ffffff"
+              strokeColor="#ffffff"
               minFontSize={48}
+              rgb={true}
             />
           </div>
           
@@ -210,7 +212,19 @@ export default function LandingPage() {
       <footer className="relative z-10 border-t border-white/10 py-12 px-8 mt-32">
         <div className="max-w-7xl mx-auto flex flex-col items-center gap-12">
           <div className="w-full h-48 flex items-center justify-center">
-            <TextHoverEffect text="MindVault" />
+            <TextPressure
+              text="MindVault"
+              flex
+              alpha={false}
+              stroke={true}
+              width
+              weight
+              italic
+              textColor="#ffffff"
+              strokeColor="#ffffff"
+              minFontSize={48}
+              rgb={true}
+            />
           </div>
           <div className="w-full flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="flex items-center gap-2">
@@ -227,6 +241,16 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Circular Text in Bottom Right */}
+      <div className="fixed bottom-0 right-0 z-[60] pointer-events-auto p-4 md:p-8">
+        <CircularText
+          text="MINDVAULT*MINDVAULT*MINDVAULT*"
+          onHover="speedUp"
+          spinDuration={20}
+          className="scale-[0.4] md:scale-[0.6] lg:scale-[0.8] origin-bottom-right"
+        />
+      </div>
     </div>
   );
 }

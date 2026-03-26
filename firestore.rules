@@ -7,48 +7,17 @@ service cloud.firestore {
     // ===============================================================
     //
     // Collection: users
-    // Document ID: userId (from Auth)
-    // Fields:
-    //   - name: string (required)
-    //   - email: string (required)
-    //   - plan: string (optional, enum: ['free', 'pro'])
-    //   - preferences: map (optional)
+    // - userId: string (matches Auth UID)
+    // - name: string (1-100 chars)
+    // - email: string (valid email format)
+    // - plan: string (enum: ['free', 'pro'])
     //
     // Collection: saved_items
-    // Document ID: itemId (auto-generated)
-    // Fields:
-    //   - userId: string (required)
-    //   - url: string (required)
-    //   - type: string (required, enum: ['link', 'text', 'image', 'video'])
-    //   - title: string (required)
-    //   - description: string (optional)
-    //   - thumbnail_url: string (optional)
-    //   - content: string (optional)
-    //   - ai_summary: string (optional)
-    //   - ai_tags: list (optional)
-    //   - topic_cluster: string (optional)
-    //   - is_favorite: bool (optional)
-    //   - is_archived: bool (optional)
-    //   - created_at: timestamp (optional)
-    //   - last_surfaced_at: timestamp (optional)
-    //
-    // Collection: collections
-    // Document ID: collectionId (auto-generated)
-    // Fields:
-    //   - userId: string (required)
-    //   - name: string (required)
-    //   - color: string (optional)
-    //   - description: string (optional)
-    //   - item_ids: list (optional)
-    //
-    // Collection: highlights
-    // Document ID: highlightId (auto-generated)
-    // Fields:
-    //   - itemId: string (required)
-    //   - userId: string (required)
-    //   - text: string (required)
-    //   - color: string (optional)
-    //   - note: string (optional)
+    // - userId: string (immutable, matches Auth UID)
+    // - url: string (max 2048 chars)
+    // - title: string (1-500 chars)
+    // - type: string (enum: ['link', 'text', 'image', 'video'])
+    // - created_at: timestamp (immutable)
     //
     // ===============================================================
 
@@ -68,31 +37,45 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == resource.data.userId;
     }
 
+    function isAdmin() {
+      return isAuthenticated() && 
+             (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+              (request.auth.token.email == "suhailsayyed01@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
     function isValidUser(data) {
-      return data.keys().hasAll(['name', 'email']) &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             data.email is string && data.email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+      return data.keys().hasOnly(['name', 'email', 'plan', 'preferences', 'created_at', 'role']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             isValidEmail(data.email);
     }
 
     function isValidSavedItem(data) {
-      return data.keys().hasAll(['userId', 'url', 'title']) &&
+      return data.keys().hasOnly(['userId', 'url', 'file_name', 'type', 'title', 'description', 'thumbnail_url', 'content', 'ai_summary', 'ai_tags', 'topic_cluster', 'is_favorite', 'is_archived', 'created_at', 'last_surfaced_at']) &&
              data.userId == request.auth.uid &&
-             data.url is string && data.url.size() < 2048 &&
-             data.title is string && data.title.size() > 0 && data.title.size() < 500 &&
-             (!('type' in data) || data.type in ['link', 'text', 'image', 'video', 'pdf']);
+             data.url is string && data.url.size() <= 2048 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 500 &&
+             (!('type' in data) || data.type in ['link', 'text', 'image', 'video', 'pdf', 'tweet']);
     }
 
     function isValidCollection(data) {
-      return data.keys().hasAll(['userId', 'name']) &&
+      return data.keys().hasOnly(['userId', 'name', 'color', 'description', 'item_ids', 'created_at']) &&
              data.userId == request.auth.uid &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 100;
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100;
     }
 
     function isValidHighlight(data) {
-      return data.keys().hasAll(['itemId', 'userId', 'text']) &&
+      return data.keys().hasOnly(['itemId', 'userId', 'text', 'color', 'note', 'created_at']) &&
              data.userId == request.auth.uid &&
              data.itemId is string &&
-             data.text is string && data.text.size() > 0 && data.text.size() < 5000;
+             data.text is string && data.text.size() > 0 && data.text.size() <= 5000;
     }
 
     // ===============================================================
@@ -100,30 +83,34 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if isOwner(userId);
-      allow create: if isOwner(userId) && isValidUser(request.resource.data);
-      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == 'user';
+      allow update: if (isOwner(userId) && isValidUser(request.resource.data) && request.resource.data.role == resource.data.role) || isAdmin();
     }
 
     match /saved_items/{itemId} {
-      allow read: if isDocOwner();
+      allow read: if isDocOwner() || isAdmin();
       allow create: if isAuthenticated() && isValidSavedItem(request.resource.data);
-      allow update: if isDocOwner() && isValidSavedItem(request.resource.data);
-      allow delete: if isDocOwner();
+      allow update: if isDocOwner() && isValidSavedItem(request.resource.data) && 
+                    request.resource.data.userId == resource.data.userId &&
+                    request.resource.data.created_at == resource.data.created_at;
+      allow delete: if isDocOwner() || isAdmin();
     }
 
     match /collections/{collectionId} {
-      allow read: if isDocOwner();
+      allow read: if isDocOwner() || isAdmin();
       allow create: if isAuthenticated() && isValidCollection(request.resource.data);
-      allow update: if isDocOwner() && isValidCollection(request.resource.data);
-      allow delete: if isDocOwner();
+      allow update: if isDocOwner() && isValidCollection(request.resource.data) && 
+                    request.resource.data.userId == resource.data.userId;
+      allow delete: if isDocOwner() || isAdmin();
     }
 
     match /highlights/{highlightId} {
-      allow read: if isDocOwner();
+      allow read: if isDocOwner() || isAdmin();
       allow create: if isAuthenticated() && isValidHighlight(request.resource.data);
-      allow update: if isDocOwner() && isValidHighlight(request.resource.data);
-      allow delete: if isDocOwner();
+      allow update: if isDocOwner() && isValidHighlight(request.resource.data) && 
+                    request.resource.data.userId == resource.data.userId;
+      allow delete: if isDocOwner() || isAdmin();
     }
   }
 }

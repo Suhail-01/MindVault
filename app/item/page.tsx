@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, collection, query, where, onSnapshot, addDoc, deleteDoc, updateDoc } from 'firebase/firestore';
@@ -23,8 +24,9 @@ import Image from 'next/image';
 import { formatDistanceToNow } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 
-export default function ItemDetail({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+function ItemDetailContent() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
   const { user } = useAuth();
   const [item, setItem] = useState<any>(null);
   const [highlights, setHighlights] = useState<any[]>([]);
@@ -245,5 +247,13 @@ export default function ItemDetail({ params }: { params: Promise<{ id: string }>
         </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+export default function ItemDetail() {
+  return (
+    <Suspense fallback={<DashboardLayout><div className="animate-pulse h-96 bg-gray-50 rounded-3xl" /></DashboardLayout>}>
+      <ItemDetailContent />
+    </Suspense>
   );
 }

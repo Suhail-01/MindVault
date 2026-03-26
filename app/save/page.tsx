@@ -28,29 +28,19 @@ function SaveContent() {
       return;
     }
     if (!url) {
-      setError('No URL provided');
+      setTimeout(() => setError('No URL provided'), 0);
       return;
     }
 
     const saveItem = async () => {
       try {
-        setStatus('Fetching metadata...');
-        const metaRes = await fetch('/api/fetch-metadata', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        
-        if (!metaRes.ok) throw new Error('Failed to fetch metadata');
-        const metadata = await metaRes.json();
-
         setStatus('AI is analyzing content...');
+        // Since we can't fetch metadata from client-side due to CORS, 
+        // we'll use the URL as the title and provide a basic summary.
         const response = await ai.models.generateContent({
           model: "gemini-3-flash-preview",
-          contents: `Analyze this content and provide a 2-line summary and 5 relevant tags. 
-          Title: ${metadata.title}
-          Description: ${metadata.description}
-          Content: ${metadata.content.substring(0, 3000)}`,
+          contents: `Analyze this URL and provide a 2-line summary and 5 relevant tags. 
+          URL: ${url}`,
           config: {
             responseMimeType: "application/json",
             responseSchema: {
@@ -69,12 +59,12 @@ function SaveContent() {
         setStatus('Saving to vault...');
         await addDoc(collection(db, 'saved_items'), {
           userId: user.uid,
-          url: metadata.url,
-          type: metadata.type || 'link',
-          title: metadata.title || url,
-          description: metadata.description || '',
-          thumbnail_url: metadata.thumbnail_url || '',
-          content: metadata.content,
+          url: url,
+          type: 'link',
+          title: url,
+          description: '',
+          thumbnail_url: '',
+          content: '',
           ai_summary: aiData.summary,
           ai_tags: aiData.tags,
           is_favorite: false,

@@ -93,7 +93,7 @@ export function ItemCard({ item }: { item: any }) {
           </div>
         </div>
 
-        <Link href={`/item/${item.id}`} className="block group/title">
+        <Link href={`/item?id=${item.id}`} className="block group/title">
           <h3 className="font-bold text-lg mb-2 line-clamp-2 group-hover/title:text-indigo-600 transition-colors">
             {item.title}
           </h3>

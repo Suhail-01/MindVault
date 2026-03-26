@@ -92,7 +92,7 @@ export default function GraphView() {
         .on('drag', dragged)
         .on('end', dragended) as any)
       .on('click', (event, d: any) => {
-        router.push(`/item/${d.id}`);
+        router.push(`/item?id=${d.id}`);
       });
 
     node.append('circle')

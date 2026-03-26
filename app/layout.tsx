@@ -3,6 +3,7 @@ import './globals.css'; // Global styles
 import { AuthProvider } from '@/lib/auth';
 import { ModalProvider } from '@/lib/modals';
 import { FirebaseConnectionTest } from '@/components/FirebaseConnectionTest';
+import { LoadingWrapper } from '@/components/LoadingWrapper';
 import { Inter } from 'next/font/google';
 
 const inter = Inter({
@@ -20,10 +21,12 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body suppressHydrationWarning className="bg-white font-sans text-gray-900">
         <AuthProvider>
-          <ModalProvider>
-            <FirebaseConnectionTest />
-            {children}
-          </ModalProvider>
+          <LoadingWrapper>
+            <ModalProvider>
+              <FirebaseConnectionTest />
+              {children}
+            </ModalProvider>
+          </LoadingWrapper>
         </AuthProvider>
       </body>
     </html>

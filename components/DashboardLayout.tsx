@@ -6,11 +6,14 @@ import { useAuth } from '@/lib/auth';
 import { usePathname } from 'next/navigation';
 import { BackButton } from './BackButton';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, MessageSquare } from 'lucide-react';
+import { useModals } from '@/lib/modals';
+import { motion } from 'motion/react';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const pathname = usePathname();
+  const { openChat, isChatOpen } = useModals();
 
   if (!user) return <>{children}</>;
 
@@ -36,6 +39,20 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             {children}
           </div>
         </main>
+
+        {/* Floating Chat Button */}
+        {!isChatOpen && (
+          <motion.button
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={openChat}
+            className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-indigo-600 text-white rounded-2xl shadow-2xl shadow-indigo-200 flex items-center justify-center hover:bg-indigo-700 transition-all"
+          >
+            <MessageSquare className="w-6 h-6" />
+          </motion.button>
+        )}
       </div>
     </AuthGuard>
   );

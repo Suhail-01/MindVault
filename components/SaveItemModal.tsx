@@ -35,26 +35,13 @@ export function SaveItemModal({ isOpen, onClose }: { isOpen: boolean, onClose: (
   const handleLinkSave = async () => {
     if (!url || !user) return;
     setLoading(true);
-    setStatus('Fetching metadata...');
+    setStatus('AI is analyzing content...');
 
     try {
-      const metaRes = await fetch('/api/fetch-metadata', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      });
-      
-      if (!metaRes.ok) throw new Error('Failed to fetch metadata');
-      const metadata = await metaRes.json();
-
-      setStatus('AI is analyzing content...');
-
       const response = await ai.models.generateContent({
         model: "gemini-3-flash-preview",
-        contents: `Analyze this content and provide a 2-line summary and 5 relevant tags. 
-        Title: ${metadata.title}
-        Description: ${metadata.description}
-        Content: ${metadata.content.substring(0, 3000)}`,
+        contents: `Analyze this URL and provide a 2-line summary and 5 relevant tags. 
+        URL: ${url}`,
         config: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -74,12 +61,12 @@ export function SaveItemModal({ isOpen, onClose }: { isOpen: boolean, onClose: (
 
       await addDoc(collection(db, 'saved_items'), {
         userId: user.uid,
-        url: metadata.url,
-        type: metadata.type || 'link',
-        title: metadata.title || url,
-        description: metadata.description || '',
-        thumbnail_url: metadata.thumbnail_url || '',
-        content: metadata.content,
+        url: url,
+        type: 'link',
+        title: url,
+        description: '',
+        thumbnail_url: '',
+        content: '',
         ai_summary: aiData.summary,
         ai_tags: aiData.tags,
         is_favorite: false,
@@ -137,20 +124,65 @@ export function SaveItemModal({ isOpen, onClose }: { isOpen: boolean, onClose: (
         );
       });
 
-      setStatus('Saving to vault...');
-      console.log('File uploaded, saving metadata to Firestore...');
+      setStatus('AI is analyzing file...');
+      console.log('File uploaded, analyzing with AI...');
 
-      // Save to Firestore without AI analysis for now to ensure reliability
+      let aiResponse;
+      const base64Data = await fileToBase64(file);
+      const base64Content = base64Data.split(',')[1];
+
+      try {
+        aiResponse = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: [
+            {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: file.type,
+                    data: base64Content
+                  }
+                },
+                {
+                  text: "Analyze this file and provide a 2-line summary and 5 relevant tags. Return the result in JSON format with 'summary' and 'tags' fields."
+                }
+              ]
+            }
+          ],
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                summary: { type: Type.STRING },
+                tags: { type: Type.ARRAY, items: { type: Type.STRING } }
+              },
+              required: ["summary", "tags"]
+            }
+          }
+        });
+      } catch (aiErr) {
+        console.error('AI Analysis failed, falling back to basic metadata:', aiErr);
+      }
+
+      const aiData = aiResponse ? JSON.parse(aiResponse.text ?? '{}') : {
+        summary: `Uploaded ${file.type.startsWith('image/') ? 'image' : 'PDF'} file`,
+        tags: [file.type.split('/')[1], 'upload']
+      };
+
+      setStatus('Saving to vault...');
+      console.log('Saving metadata to Firestore...');
+
       await addDoc(collection(db, 'saved_items'), {
         userId: user.uid,
         url: downloadUrl,
         file_name: file.name,
         type: file.type.startsWith('image/') ? 'image' : 'pdf',
         title: file.name,
-        description: `Uploaded ${file.type.startsWith('image/') ? 'image' : 'PDF'} file`,
+        description: aiData.summary,
         thumbnail_url: file.type.startsWith('image/') ? downloadUrl : '',
-        ai_summary: 'Processing summary...',
-        ai_tags: [file.type.split('/')[1], 'upload'],
+        ai_summary: aiData.summary,
+        ai_tags: aiData.tags,
         is_favorite: false,
         is_archived: false,
         created_at: new Date().toISOString(),

@@ -2,26 +2,44 @@
 
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 
-const dist = (a, b) => {
+const dist = (a: { x: number; y: number }, b: { x: number; y: number }) => {
   const dx = b.x - a.x;
   const dy = b.y - a.y;
   return Math.sqrt(dx * dx + dy * dy);
 };
 
-const getAttr = (distance, maxDist, minVal, maxVal) => {
+const getAttr = (distance: number, maxDist: number, minVal: number, maxVal: number) => {
   const val = maxVal - Math.abs((maxVal * distance) / maxDist);
   return Math.max(minVal, val + minVal);
 };
 
-const debounce = (func, delay) => {
-  let timeoutId;
-  return (...args) => {
+const debounce = (func: Function, delay: number) => {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: any[]) => {
     clearTimeout(timeoutId);
     timeoutId = setTimeout(() => {
-      func.apply(this, args);
+      func.apply(null, args);
     }, delay);
   };
 };
+
+interface TextPressureProps {
+  text?: string;
+  fontFamily?: string;
+  fontUrl?: string;
+  width?: boolean;
+  weight?: boolean;
+  italic?: boolean;
+  alpha?: boolean;
+  flex?: boolean;
+  stroke?: boolean;
+  scale?: boolean;
+  textColor?: string;
+  strokeColor?: string;
+  className?: string;
+  minFontSize?: number;
+  rgb?: boolean;
+}
 
 const TextPressure = ({
   text = 'Compressa',
@@ -41,11 +59,12 @@ const TextPressure = ({
   strokeColor = '#FF0000',
   className = '',
 
-  minFontSize = 24
-}) => {
-  const containerRef = useRef(null);
-  const titleRef = useRef(null);
-  const spansRef = useRef([]);
+  minFontSize = 24,
+  rgb = false
+}: TextPressureProps) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const spansRef = useRef<(HTMLSpanElement | null)[]>([]);
 
   const mouseRef = useRef({ x: 0, y: 0 });
   const cursorRef = useRef({ x: 0, y: 0 });
@@ -57,11 +76,11 @@ const TextPressure = ({
   const chars = text.split('');
 
   useEffect(() => {
-    const handleMouseMove = e => {
+    const handleMouseMove = (e: MouseEvent) => {
       cursorRef.current.x = e.clientX;
       cursorRef.current.y = e.clientY;
     };
-    const handleTouchMove = e => {
+    const handleTouchMove = (e: TouchEvent) => {
       const t = e.touches[0];
       cursorRef.current.x = t.clientX;
       cursorRef.current.y = t.clientY;
@@ -116,7 +135,7 @@ const TextPressure = ({
   }, [setSize]);
 
   useEffect(() => {
-    let rafId;
+    let rafId: number;
     const animate = () => {
       mouseRef.current.x += (cursorRef.current.x - mouseRef.current.x) / 15;
       mouseRef.current.y += (cursorRef.current.y - mouseRef.current.y) / 15;
@@ -138,8 +157,8 @@ const TextPressure = ({
 
           const wdth = width ? Math.floor(getAttr(d, maxDist, 5, 200)) : 100;
           const wght = weight ? Math.floor(getAttr(d, maxDist, 100, 900)) : 400;
-          const italVal = italic ? getAttr(d, maxDist, 0, 1).toFixed(2) : 0;
-          const alphaVal = alpha ? getAttr(d, maxDist, 0, 1).toFixed(2) : 1;
+          const italVal = italic ? getAttr(d, maxDist, 0, 1).toFixed(2) : '0';
+          const alphaVal = alpha ? getAttr(d, maxDist, 0, 1).toFixed(2) : '1';
 
           const newFontVariationSettings = `'wght' ${wght}, 'wdth' ${wdth}, 'ital' ${italVal}`;
 
@@ -175,7 +194,7 @@ const TextPressure = ({
 
         .stroke span {
           position: relative;
-          color: ${textColor};
+          color: transparent;
         }
         .stroke span::after {
           content: attr(data-char);
@@ -191,11 +210,37 @@ const TextPressure = ({
         .text-pressure-title {
           color: ${textColor};
         }
+
+        @keyframes rgb-animation {
+          0% { color: #00FFFF; }
+          25% { color: #FF00FF; }
+          50% { color: #FFFF00; }
+          75% { color: #00FF00; }
+          100% { color: #00FFFF; }
+        }
+
+        @keyframes rgb-stroke-animation {
+          0% { -webkit-text-stroke-color: #00FFFF; }
+          25% { -webkit-text-stroke-color: #FF00FF; }
+          50% { -webkit-text-stroke-color: #FFFF00; }
+          75% { -webkit-text-stroke-color: #00FF00; }
+          100% { -webkit-text-stroke-color: #00FFFF; }
+        }
+
+        .rgb-text span {
+          animation: rgb-animation 5s linear infinite;
+          animation-delay: var(--delay, 0s);
+        }
+
+        .rgb-text.stroke span::after {
+          animation: rgb-stroke-animation 5s linear infinite;
+          animation-delay: var(--delay, 0s);
+        }
       `}</style>
     );
   }, [fontFamily, fontUrl, textColor, strokeColor]);
 
-  const dynamicClassName = [className, flex ? 'flex' : '', stroke ? 'stroke' : ''].filter(Boolean).join(' ');
+  const dynamicClassName = [className, flex ? 'flex' : '', stroke ? 'stroke' : '', rgb ? 'rgb-text' : ''].filter(Boolean).join(' ');
 
   return (
     <div
@@ -229,12 +274,13 @@ const TextPressure = ({
         {chars.map((char, i) => (
           <span
             key={i}
-            ref={el => (spansRef.current[i] = el)}
+            ref={el => { spansRef.current[i] = el; }}
             data-char={char}
             style={{
               display: 'inline-block',
-              color: stroke ? undefined : textColor
-            }}
+              color: stroke ? undefined : textColor,
+              '--delay': rgb ? `${i * 0.1}s` : '0s'
+            } as any}
           >
             {char}
           </span>

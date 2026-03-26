@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 export const TextHoverEffect = ({
   text,
   duration,
+  automatic = false,
 }: {
   text: string;
   duration?: number;
@@ -16,7 +17,23 @@ export const TextHoverEffect = ({
   const [maskPosition, setMaskPosition] = useState({ cx: "50%", cy: "50%" });
 
   useEffect(() => {
-    if (svgRef.current && cursor.x !== null && cursor.y !== null) {
+    if (automatic) {
+      let angle = 0;
+      const interval = setInterval(() => {
+        angle += 0.05;
+        const cx = 50 + 40 * Math.cos(angle);
+        const cy = 50 + 40 * Math.sin(angle);
+        setMaskPosition({
+          cx: `${cx}%`,
+          cy: `${cy}%`,
+        });
+      }, 50);
+      return () => clearInterval(interval);
+    }
+  }, [automatic]);
+
+  useEffect(() => {
+    if (!automatic && svgRef.current && cursor.x !== null && cursor.y !== null) {
       const svgRect = svgRef.current.getBoundingClientRect();
       const cxPercentage = ((cursor.x - svgRect.left) / svgRect.width) * 100;
       const cyPercentage = ((cursor.y - svgRect.top) / svgRect.height) * 100;
@@ -25,7 +42,9 @@ export const TextHoverEffect = ({
         cy: `${cyPercentage}%`,
       });
     }
-  }, [cursor]);
+  }, [cursor, automatic]);
+
+  const isVisible = hovered || automatic;
 
   return (
     <svg
@@ -40,23 +59,34 @@ export const TextHoverEffect = ({
       className="select-none"
     >
       <defs>
-        <radialGradient
+        <linearGradient
           id="textGradient"
           gradientUnits="userSpaceOnUse"
-          cx="50%"
-          cy="50%"
-          r="50%"
+          x1="0%"
+          y1="0%"
+          x2="100%"
+          y2="100%"
         >
-          {hovered && (
+          {isVisible && (
             <>
-              <stop offset="0%" stopColor="#00FFFF" />
-              <stop offset="25%" stopColor="#FF00FF" />
-              <stop offset="50%" stopColor="#FFFF00" />
-              <stop offset="75%" stopColor="#00FF00" />
-              <stop offset="100%" stopColor="#FFFFFF" />
+              <stop offset="0%" stopColor="#00FFFF">
+                <animate attributeName="stop-color" values="#00FFFF;#FF00FF;#FFFF00;#00FF00;#00FFFF" dur="5s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="25%" stopColor="#FF00FF">
+                <animate attributeName="stop-color" values="#FF00FF;#FFFF00;#00FF00;#00FFFF;#FF00FF" dur="5s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="50%" stopColor="#FFFF00">
+                <animate attributeName="stop-color" values="#FFFF00;#00FF00;#00FFFF;#FF00FF;#FFFF00" dur="5s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="75%" stopColor="#00FF00">
+                <animate attributeName="stop-color" values="#00FF00;#00FFFF;#FF00FF;#FFFF00;#00FF00" dur="5s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor="#FFFFFF">
+                <animate attributeName="stop-color" values="#FFFFFF;#00FFFF;#FF00FF;#FFFF00;#FFFFFF" dur="5s" repeatCount="indefinite" />
+              </stop>
             </>
           )}
-        </radialGradient>
+        </linearGradient>
 
         <motion.radialGradient
           id="revealMask"

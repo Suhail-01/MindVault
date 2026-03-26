@@ -25,7 +25,8 @@
       "properties": {
         "userId": { "type": "string" },
         "url": { "type": "string" },
-        "type": { "type": "string", "enum": ["link", "text", "image", "video"] },
+        "type": { "type": "string", "enum": ["link", "text", "image", "video", "pdf", "tweet"] },
+        "file_name": { "type": "string" },
         "title": { "type": "string" },
         "description": { "type": "string" },
         "thumbnail_url": { "type": "string" },
@@ -49,7 +50,8 @@
         "name": { "type": "string" },
         "color": { "type": "string" },
         "description": { "type": "string" },
-        "item_ids": { "type": "array", "items": { "type": "string" } }
+        "item_ids": { "type": "array", "items": { "type": "string" } },
+        "created_at": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "name"]
     },
@@ -62,7 +64,8 @@
         "userId": { "type": "string" },
         "text": { "type": "string" },
         "color": { "type": "string" },
-        "note": { "type": "string" }
+        "note": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
       },
       "required": ["itemId", "userId", "text"]
     }
